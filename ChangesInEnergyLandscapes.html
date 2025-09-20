@@ -1,0 +1,1276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Change within the Energy Landscape - Standalone</title>
+    <style>
+        body {
+            font-family: 'Times New Roman', serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            color: #333;
+            background: white;
+        }
+        
+        h1 {
+            color: #1a365d;
+            border-bottom: 3px solid #2b77ad;
+            padding-bottom: 10px;
+            text-align: center;
+            font-size: 2.2em;
+            margin-bottom: 30px;
+        }
+        
+        h2 {
+            color: #2b77ad;
+            border-bottom: 2px solid #4a9eff;
+            padding-bottom: 8px;
+            margin-top: 40px;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+        
+        h3 {
+            color: #4a5568;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+        
+        .math-display {
+            background: #f7fafc;
+            border-left: 4px solid #4299e1;
+            padding: 15px 20px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+            text-align: center;
+            font-family: 'Times New Roman', serif;
+            font-size: 1.1em;
+        }
+        
+        .boxed {
+            background: #fff5f5;
+            border: 2px solid #fc8181;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+            text-align: center;
+            font-weight: bold;
+        }
+        
+        .code-block {
+            background: #1a202c;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            line-height: 1.4;
+        }
+        
+        .note {
+            background: #f0fff4;
+            border-left: 4px solid #48bb78;
+            padding: 15px 20px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .interactive-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 30px 0;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+        
+        .control-panel {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .slider-container {
+            margin: 10px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .slider-container label {
+            min-width: 120px;
+            font-weight: bold;
+        }
+        
+        .slider {
+            flex: 1;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(255,255,255,0.3);
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #ffffff;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+        
+        .slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #ffffff;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+        
+        .value-display {
+            min-width: 60px;
+            text-align: right;
+            font-family: monospace;
+            font-weight: bold;
+        }
+        
+        .canvas-container {
+            background: rgba(255,255,255,0.95);
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+        }
+        
+        canvas {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            display: block;
+            margin: 0 auto;
+            cursor: crosshair;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin: 15px 0;
+        }
+        
+        .control-button {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        .control-button:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-1px);
+        }
+        
+        .control-button:active {
+            transform: translateY(0);
+        }
+        
+        .phase-portrait {
+            background: white;
+            color: #333;
+        }
+        
+        .info-panel {
+            background: rgba(255,255,255,0.1);
+            border-radius: 6px;
+            padding: 10px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 0.9em;
+        }
+        
+        .feature-highlight {
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            text-align: center;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        
+        .math-interactive {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 6px;
+            padding: 10px;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .section-break {
+            border: none;
+            border-top: 2px dashed #cbd5e0;
+            margin: 40px 0;
+        }
+        
+        .export-info {
+            background: #e6fffa;
+            border: 2px solid #38b2ac;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        ul, ol {
+            margin-left: 20px;
+        }
+        
+        li {
+            margin-bottom: 8px;
+        }
+        
+        @media print {
+            body {
+                max-width: none;
+                margin: 0;
+                padding: 20px;
+                font-size: 12pt;
+            }
+            
+            .code-block {
+                background: #f8f9fa;
+                color: #000;
+                border: 1px solid #dee2e6;
+                font-size: 10pt;
+                break-inside: avoid;
+            }
+            
+            .interactive-section {
+                background: #f0f0f0;
+                color: #333;
+            }
+            
+            h1, h2, h3 { 
+                page-break-after: avoid;
+                break-after: avoid;
+            }
+            .math-display, .boxed, .note { 
+                page-break-inside: avoid;
+                break-inside: avoid; 
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="export-info">
+📦 <strong>Standalone Export Version</strong> - No external dependencies • Works offline • Self-contained interactive document
+</div>
+
+<h1>Change within the Energy Landscape</h1>
+<div style="text-align: center; margin-bottom: 40px; font-style: italic; color: #666;">
+    Mathematical Framework for Fast-Slow Dynamics with Memory and Hysteresis<br>
+    <strong>Interactive Standalone Edition</strong>
+</div>
+
+<h2>1. Basic Stochastic Differential Equation</h2>
+
+<p>The fundamental equation for position dynamics with cost landscape C(x,t) and noise η is:</p>
+
+<div class="math-display">
+<strong>dP/dt = -∇C(x,t) + η</strong>
+</div>
+
+<p>The solution is given by:</p>
+
+<div class="math-display">
+<strong>x(t) = x(0) + ∫₀ᵗ [-∇C(x(s),s)] ds + ∫₀ᵗ η(s) ds</strong>
+</div>
+
+<h2>2. Extended "Deck-in-the-Air" Formalization</h2>
+
+<h3>2.1 Model Equations</h3>
+
+<p><strong>State (configuration) dynamics:</strong></p>
+<div class="math-display">
+<strong>dx = -∇ₓC(x,m,t) dt + Σ(x,m,t) dWₜ + b(x,m,t) dt</strong>
+</div>
+
+<p><strong>Structural/internal dynamics (path dependence, damage, repair, plasticity):</strong></p>
+<div class="math-display">
+<strong>dm = f(x,m,t) dt + G(x,m,t) dVₜ</strong>
+</div>
+
+<p><strong>Optional control/repair input u(t):</strong></p>
+<div class="math-display">
+<strong>dm = f(x,m,t,u) dt + G(x,m,t) dVₜ</strong>
+</div>
+
+<h3>2.2 Notes on Terms</h3>
+
+<ul>
+<li><strong>C(x,m,t):</strong> Cost/potential depends on configuration x and structural state m; time dependence allows exogenous forcing. Local minima are defined w.r.t. x for fixed m,t.</li>
+
+<li><strong>Σ(x,m,t) dWₜ:</strong> Stochastic increments for configuration; Wₜ is an M-dimensional Wiener process (white noise). Σ may be state-dependent (multiplicative noise) to capture that turbulence or shocks act differently on warped vs. pristine cards.</li>
+
+<li><strong>b(x,m,t):</strong> Deterministic bias in drift not captured by -∇C (e.g., systematic torque in toss).</li>
+
+<li><strong>f(x,m,t):</strong> Slow dynamics of structure: accumulation of damage, adhesion, wear. Typical form f = -α(m - m_eq(x,t)) + h(x,m,t) where h encodes irreversible changes.</li>
+
+<li><strong>G(x,m,t) dVₜ:</strong> Stochasticity in structural change (random tears, sudden sticking events); Vₜ may be Poisson jumps (for rare irreversible events) or Wiener noise for continual degradation.</li>
+
+<li><strong>u(t):</strong> Agentic repair/manufacture input; can restore m toward pristine state m₀.</li>
+</ul>
+
+<h2>3. Toy Model: Saddle-Node Bifurcation and Critical m_c</h2>
+
+<p>Consider the toy model:</p>
+<div class="math-display">
+<strong>C(x,m) = x⁴/4 - a(m)x²/2 + βm·x², where a(m) = a₀(1-m)</strong>
+</div>
+
+<p>Collecting the quadratic term:</p>
+<div class="math-display">
+<strong>C(x,m) = x⁴/4 - a_eff(m)x²/2, where a_eff(m) = a₀ - (a₀+2β)m</strong>
+</div>
+
+<p>Saddle-node annihilation occurs at a_eff(m_c) = 0. Therefore:</p>
+
+<div class="boxed">
+<strong>m_c = a₀/(a₀ + 2β)</strong>
+</div>
+
+<ul>
+<li>For m < m_c: double-well (two stable minima at ±√a_eff)</li>
+<li>For m > m_c: single-well (only x=0 stable)</li>
+</ul>
+
+<h3>3.1 Barrier Height and Escape Time</h3>
+
+<p>With a_eff(m) > 0:</p>
+<ul>
+<li>Minima energy: C(±√a_eff, m) = -¼a_eff(m)²</li>
+<li>Saddle energy: C(0,m) = 0</li>
+<li>Barrier: ΔC(m) = ¼a_eff(m)²</li>
+</ul>
+
+<p>Small-noise Kramers-type mean escape time:</p>
+
+<div class="boxed">
+<strong>τ_esc(m) ≈ A(m) exp[a_eff(m)²/(4ε²)]</strong>
+</div>
+
+<div class="interactive-section">
+<h2 style="color: white; border-bottom: 2px solid rgba(255,255,255,0.5);">🎮 Interactive Energy Landscape Explorer</h2>
+
+<div class="control-panel">
+<h3 style="margin-top: 0;">Toy Model Parameters</h3>
+<div class="slider-container">
+    <label for="a0-slider">a₀ (well depth):</label>
+    <input type="range" id="a0-slider" class="slider" min="0.5" max="4.0" step="0.1" value="2.0">
+    <span id="a0-value" class="value-display">2.0</span>
+</div>
+<div class="slider-container">
+    <label for="beta-slider">β (coupling):</label>
+    <input type="range" id="beta-slider" class="slider" min="0.1" max="1.5" step="0.05" value="0.6">
+    <span id="beta-value" class="value-display">0.6</span>
+</div>
+<div class="slider-container">
+    <label for="m-slider">m (damage):</label>
+    <input type="range" id="m-slider" class="slider" min="0.0" max="1.0" step="0.01" value="0.3">
+    <span id="m-value" class="value-display">0.3</span>
+</div>
+<div class="slider-container">
+    <label for="noise-slider">σ (noise):</label>
+    <input type="range" id="noise-slider" class="slider" min="0.0" max="0.5" step="0.01" value="0.1">
+    <span id="noise-value" class="value-display">0.1</span>
+</div>
+</div>
+
+<div class="canvas-container">
+<canvas id="landscape-canvas" width="600" height="300"></canvas>
+</div>
+
+<div class="info-panel" id="info-panel">
+<div><strong>Critical m_c:</strong> <span id="mc-value">0.769</span></div>
+<div><strong>Current regime:</strong> <span id="regime-value">Double-well</span></div>
+<div><strong>Barrier height:</strong> <span id="barrier-value">0.45</span></div>
+<div><strong>Well positions:</strong> <span id="wells-value">±1.41</span></div>
+</div>
+
+<div class="button-group">
+<button class="control-button" id="animate-btn">🎬 Animate Trajectory</button>
+<button class="control-button" id="reset-btn">🔄 Reset</button>
+<button class="control-button" id="hysteresis-btn">🔀 Show Hysteresis</button>
+</div>
+</div>
+
+<div class="interactive-section">
+<h2 style="color: white; border-bottom: 2px solid rgba(255,255,255,0.5);">🌪️ Phase Portrait Explorer</h2>
+
+<div class="control-panel">
+<h3 style="margin-top: 0;">Resonant Dynamics</h3>
+<div class="slider-container">
+    <label for="delta-slider">δ (detuning):</label>
+    <input type="range" id="delta-slider" class="slider" min="-2.0" max="2.0" step="0.05" value="0.5">
+    <span id="delta-value" class="value-display">0.5</span>
+</div>
+<div class="slider-container">
+    <label for="amplitude-slider">A (coupling):</label>
+    <input type="range" id="amplitude-slider" class="slider" min="0.1" max="2.0" step="0.05" value="1.0">
+    <span id="amplitude-value" class="value-display">1.0</span>
+</div>
+<div class="slider-container">
+    <label for="energy-slider">Initial I:</label>
+    <input type="range" id="energy-slider" class="slider" min="0.01" max="2.0" step="0.01" value="0.5">
+    <span id="energy-value" class="value-display">0.5</span>
+</div>
+<div>
+    <label for="imax-slider">IMax (zoom out y-axis): <span id="imax-value">4.0</span></label>
+    <input type="range" id="imax-slider" min="1" max="200" step="0.5" value="4.0">
+</div>
+<div>
+    <label for="psimax-slider">PsiMax (zoom out x-axis): <span id="psimax-value">3.1</span></label>
+    <input type="range" id="psimax-slider" min="3.1" max="31.4" step="0.1" value="3.1">
+</div>
+</div>
+
+<div class="canvas-container phase-portrait">
+<canvas id="phase-canvas" width="400" height="400"></canvas>
+</div>
+
+<div class="button-group">
+<button class="control-button" id="phase-animate-btn">▶️ Run Dynamics</button>
+<button class="control-button" id="phase-reset-btn">🔄 Reset</button>
+<button class="control-button" id="separatrix-btn">📐 Show Separatrix</button>
+</div>
+</div>
+
+<h2>4. Complete Code Implementation</h2>
+
+<div class="code-block">
+import numpy as np
+import matplotlib.pyplot as plt
+import math
+
+# Example parameterization (toy model)
+a0, beta = 2.0, 0.6
+gamma1, gamma2 = 0.1, 0.02
+x_th = 0.7
+sigma0, lam = 0.3, 0.8
+dt, T = 1e-3, 200.0
+m_jump = 0.05
+
+def a_eff(m): 
+    return a0 - (a0 + 2*beta)*m
+
+def grad_C(x, m): 
+    return x**3 - a_eff(m)*x
+
+def f_struct(x, m): 
+    return gamma1*max(0.0, abs(x)-x_th) - gamma2*m
+
+def sigma(m): 
+    return sigma0*(1.0 + lam*m)
+
+def rate_r(x, m): 
+    return 0.01*max(0.0, abs(x) - 1.5)  # rare big excursions
+
+# Euler-Maruyama integration
+def simulate_system(T=200.0, dt=1e-3):
+    nt = int(T/dt)
+    x, m, t = 0.0, 0.0, 0.0
+    trajectory = []
+    
+    for i in range(nt):
+        dW = np.sqrt(dt) * np.random.randn()
+        # Poisson jump count
+        lam_p = rate_r(x, m)*dt
+        dN = np.random.poisson(lam_p)
+        
+        # Updates
+        x += (-grad_C(x, m))*dt + sigma(m)*dW
+        m += f_struct(x, m)*dt + m_jump*dN
+        m = min(1.0, max(0.0, m))  # clamp m to [0,1]
+        t += dt
+        trajectory.append((t, x, m))
+    
+    return trajectory
+
+# Critical point calculation
+def critical_m(a0, beta):
+    return a0/(a0 + 2*beta)
+
+print(f"Critical m_c = {critical_m(2.0, 0.6):.3f}")
+
+# Run simulation
+trajectory = simulate_system()
+times, xs, ms = zip(*trajectory)
+
+# Basic plotting (if matplotlib available)
+try:
+    plt.figure(figsize=(12, 4))
+    plt.subplot(131)
+    plt.plot(times, xs, alpha=0.7)
+    plt.xlabel('Time'); plt.ylabel('Position x')
+    plt.title('Configuration Dynamics')
+    
+    plt.subplot(132)
+    plt.plot(times, ms, alpha=0.7)
+    plt.xlabel('Time'); plt.ylabel('Damage m')
+    plt.title('Structural Evolution')
+    
+    plt.subplot(133)
+    plt.plot(xs, ms, alpha=0.7)
+    plt.xlabel('Position x'); plt.ylabel('Damage m')
+    plt.title('Phase Portrait')
+    
+    plt.tight_layout()
+    plt.show()
+except ImportError:
+    print("Matplotlib not available - using interactive visualization instead")
+</div>
+
+<h2>5. Resonant Dynamics Implementation</h2>
+
+<div class="code-block">
+def resonant_dynamics(T=1000.0, dt=0.01, A=1e-3, delta=0.5, I0=0.5):
+    """
+    Simulate resonant dynamics: 
+    dI/dt = 2*A*sqrt(2*I)*sin(psi)
+    dpsi/dt = delta + A*cos(psi)/sqrt(2*I)
+    """
+    nt = int(T/dt)
+    I, psi = I0, 0.1
+    trajectory = []
+    
+    for i in range(nt):
+        # RK4 integration
+        def deriv(state):
+            Ii, psii = state
+            s2 = math.sqrt(max(1e-12, 2.0*Ii))
+            return np.array([2.0*A*s2*math.sin(psii),
+                             delta + A*(1.0/max(1e-8,s2))*math.cos(psii)])
+        
+        st = np.array([I, psi])
+        k1 = deriv(st)
+        k2 = deriv(st + 0.5*dt*k1)
+        k3 = deriv(st + 0.5*dt*k2) 
+        k4 = deriv(st + dt*k3)
+        st = st + (dt/6.0)*(k1 + 2*k2 + 2*k3 + k4)
+        I, psi = st
+        
+        # Add stochastic perturbations
+        I += np.sqrt(2*1e-6*dt)*np.random.randn()
+        I = max(1e-12, I)
+        psi = (psi + math.pi) % (2*math.pi) - math.pi
+        
+        trajectory.append((I, psi))
+    
+    return trajectory
+
+# Example usage
+resonant_traj = resonant_dynamics()
+actions, phases = zip(*resonant_traj)
+</div>
+
+<h2>6. Key Mathematical Insights</h2>
+
+<div class="math-interactive">
+<div><strong>Effective Parameter:</strong> a_eff(m) = a₀ - (a₀ + 2β)m</div>
+<div><strong>Critical Point:</strong> m_c = a₀/(a₀ + 2β)</div>
+<div><strong>Barrier Height:</strong> ΔC = ¼[a_eff(m)]²</div>
+<div><strong>Escape Time:</strong> τ ~ exp(ΔC/σ²)</div>
+</div>
+
+<div class="note">
+<strong>🎓 Key Learning Points:</strong>
+<ul>
+<li><strong>Bifurcation Theory:</strong> Small changes in structural parameter m can cause dramatic behavioral shifts</li>
+<li><strong>Stochastic Effects:</strong> Noise enables transitions between otherwise stable states</li>
+<li><strong>Memory and Hysteresis:</strong> System response depends on parameter history, not just current values</li>
+<li><strong>Multi-scale Dynamics:</strong> Fast configurational variables coupled to slow structural evolution</li>
+<li><strong>Control Applications:</strong> Understanding how to design interventions for desired behavior</li>
+</ul>
+</div>
+
+<h2>7. Summary and Applications</h2>
+
+<p>This mathematical framework provides a unified approach to modeling complex dynamical systems with:</p>
+
+<ul>
+<li><strong>Multi-scale temporal dynamics:</strong> Fast variables responding to slowly evolving structural parameters</li>
+<li><strong>Path-dependent behavior:</strong> History-dependent transitions where routes matter</li>
+<li><strong>Stochastic perturbations:</strong> Both continuous diffusion and discrete jump processes</li>
+<li><strong>Bifurcations and metastability:</strong> Landscape changes creating/destroying attractors</li>
+<li><strong>Memory and hysteresis:</strong> System response depends on parameter history</li>
+<li><strong>Control capabilities:</strong> External inputs can modify structural evolution</li>
+</ul>
+
+<p>Applications span from mechanical systems and material science to celestial mechanics and biological networks, providing both theoretical insights and practical computational tools.</p>
+
+<div class="feature-highlight">
+🚀 <strong>Standalone Features:</strong> No internet required • Self-contained mathematics • Interactive visualizations • Complete code examples • Export-ready format
+</div>
+
+<script>
+// Standalone Interactive Energy Landscape Visualization
+// No external dependencies - pure vanilla JavaScript
+// Updated: Fixed resonant dynamics to be consistent Hamiltonian system
+// Updated flow field to use direct derivatives
+// Updated separatrix to plot actual level set curves and fixed points
+
+class EnergyLandscape {
+    constructor() {
+        this.canvas = document.getElementById('landscape-canvas');
+        this.ctx = this.canvas.getContext('2d');
+        this.a0 = 2.0;
+        this.beta = 0.6;
+        this.m = 0.3;
+        this.noise = 0.1;
+        this.particles = [];
+        this.animating = false;
+        this.setupEventListeners();
+        this.draw();
+    }
+    
+    setupEventListeners() {
+        // Parameter sliders
+        document.getElementById('a0-slider').addEventListener('input', (e) => {
+            this.a0 = parseFloat(e.target.value);
+            document.getElementById('a0-value').textContent = this.a0.toFixed(1);
+            this.updateInfo();
+            this.draw();
+        });
+        
+        document.getElementById('beta-slider').addEventListener('input', (e) => {
+            this.beta = parseFloat(e.target.value);
+            document.getElementById('beta-value').textContent = this.beta.toFixed(2);
+            this.updateInfo();
+            this.draw();
+        });
+        
+        document.getElementById('m-slider').addEventListener('input', (e) => {
+            this.m = parseFloat(e.target.value);
+            document.getElementById('m-value').textContent = this.m.toFixed(2);
+            this.updateInfo();
+            this.draw();
+        });
+        
+        document.getElementById('noise-slider').addEventListener('input', (e) => {
+            this.noise = parseFloat(e.target.value);
+            document.getElementById('noise-value').textContent = this.noise.toFixed(2);
+        });
+        
+        // Control buttons
+        document.getElementById('animate-btn').addEventListener('click', () => {
+            this.toggleAnimation();
+        });
+        
+        document.getElementById('reset-btn').addEventListener('click', () => {
+            this.reset();
+        });
+        
+        document.getElementById('hysteresis-btn').addEventListener('click', () => {
+            this.showHysteresis();
+        });
+        
+        // Canvas click to add particles
+        this.canvas.addEventListener('click', (e) => {
+            const rect = this.canvas.getBoundingClientRect();
+            const x = ((e.clientX - rect.left) / this.canvas.width) * 8 - 4;
+            this.addParticle(x);
+            this.draw();
+        });
+    }
+    
+    aEff(m) {
+        return this.a0 - (this.a0 + 2 * this.beta) * m;
+    }
+    
+    potential(x, m) {
+        return 0.25 * x * x * x * x - 0.5 * this.aEff(m) * x * x;
+    }
+    
+    force(x, m) {
+        return -(x * x * x - this.aEff(m) * x);
+    }
+    
+    updateInfo() {
+        const mc = this.a0 / (this.a0 + 2 * this.beta);
+        const aeff = this.aEff(this.m);
+        
+        document.getElementById('mc-value').textContent = mc.toFixed(3);
+        
+        if (aeff > 0) {
+            document.getElementById('regime-value').textContent = 'Double-well';
+            document.getElementById('barrier-value').textContent = (0.25 * aeff * aeff).toFixed(3);
+            document.getElementById('wells-value').textContent = `±${Math.sqrt(aeff).toFixed(2)}`;
+        } else {
+            document.getElementById('regime-value').textContent = 'Single-well';
+            document.getElementById('barrier-value').textContent = '0.000';
+            document.getElementById('wells-value').textContent = '0';
+        }
+    }
+    
+    draw() {
+        const ctx = this.ctx;
+        const width = this.canvas.width;
+        const height = this.canvas.height;
+        
+        ctx.fillStyle = '#f8f9fa';
+        ctx.fillRect(0, 0, width, height);
+        
+        ctx.strokeStyle = '#2563eb';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        
+        const xMin = -4, xMax = 4;
+        const yMin = -2, yMax = 3;
+        
+        for (let i = 0; i < width; i++) {
+            const x = xMin + (i / width) * (xMax - xMin);
+            const V = this.potential(x, this.m);
+            const y = height - ((V - yMin) / (yMax - yMin)) * height;
+            
+            if (i === 0) ctx.moveTo(i, y);
+            else ctx.lineTo(i, y);
+        }
+        ctx.stroke();
+        
+        ctx.strokeStyle = '#666';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([5, 5]);
+        const zeroY = height - ((0 - yMin) / (yMax - yMin)) * height;
+        ctx.beginPath();
+        ctx.moveTo(0, zeroY);
+        ctx.lineTo(width, zeroY);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        
+        this.particles.forEach(particle => {
+            const px = ((particle.x - xMin) / (xMax - xMin)) * width;
+            const py = height - ((this.potential(particle.x, this.m) - yMin) / (yMax - yMin)) * height;
+            
+            ctx.fillStyle = particle.color || '#dc2626';
+            ctx.beginPath();
+            ctx.arc(px, py, 6, 0, 2 * Math.PI);
+            ctx.fill();
+        });
+        
+        ctx.strokeStyle = '#e5e7eb';
+        ctx.lineWidth = 1;
+        
+        for (let x = -4; x <= 4; x++) {
+            const px = ((x - xMin) / (xMax - xMin)) * width;
+            ctx.beginPath();
+            ctx.moveTo(px, 0);
+            ctx.lineTo(px, height);
+            ctx.stroke();
+        }
+        
+        ctx.fillStyle = '#374151';
+        ctx.font = '12px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText('Energy Landscape C(x,m)', width/2, 20);
+        ctx.fillText('Click to add particles • Drag sliders to explore', width/2, height - 10);
+    }
+    
+    addParticle(x) {
+        this.particles.push({
+            x: x,
+            color: `hsl(${Math.random() * 360}, 70%, 50%)`
+        });
+    }
+    
+    gaussianRandom() {
+        let u = 0, v = 0;
+        while (u === 0) u = Math.random();
+        while (v === 0) v = Math.random();
+        return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+    }
+
+    updateParticles(dt) {
+        this.particles.forEach(particle => {
+            const F = this.force(particle.x, this.m);
+            const D = this.noise * 0.5;
+            const noiseTerm = Math.sqrt(2 * D * dt) * this.gaussianRandom();
+            
+            particle.x += F * dt + noiseTerm;
+            
+            particle.x = Math.max(-4, Math.min(4, particle.x));
+        });
+    }
+    
+    toggleAnimation() {
+        const btn = document.getElementById('animate-btn');
+        if (this.animating) {
+            this.animating = false;
+            btn.textContent = '🎬 Animate Trajectory';
+        } else {
+            this.animating = true;
+            btn.textContent = '⏸️ Pause Animation';
+            this.animate();
+        }
+    }
+    
+    animate() {
+        if (!this.animating) return;
+        
+        this.updateParticles(0.016); // Corresponds to ~60 FPS
+        this.draw();
+        
+        requestAnimationFrame(() => this.animate());
+    }
+    
+    reset() {
+        this.particles = [];
+        this.animating = false;
+        document.getElementById('animate-btn').textContent = '🎬 Animate Trajectory';
+        this.draw();
+    }
+    
+    showHysteresis() {
+        if (this.isHysteresisRunning) return;
+        this.isHysteresisRunning = true;
+
+        const originalM = this.m;
+        let mSlider = document.getElementById('m-slider');
+        
+        const animateM = (start, end, duration) => {
+            let startTime = null;
+            
+            const step = (currentTime) => {
+                if (!startTime) startTime = currentTime;
+                const progress = Math.min((currentTime - startTime) / duration, 1);
+                
+                const currentM = start + (end - start) * progress;
+                this.m = currentM;
+                mSlider.value = currentM;
+                document.getElementById('m-value').textContent = currentM.toFixed(2);
+                this.updateInfo();
+                this.draw();
+                
+                if (progress < 1) {
+                    requestAnimationFrame(step);
+                } else {
+                    if (end === 1.0) {
+                        animateM(1.0, 0.0, 3000);
+                    } else if (end === 0.0) {
+                        animateM(0.0, originalM, 1500);
+                    } else {
+                        this.isHysteresisRunning = false;
+                    }
+                }
+            };
+            requestAnimationFrame(step);
+        };
+        
+        animateM(this.m, 1.0, 3000 * (1.0 - this.m));
+    }
+}
+
+// Phase Portrait Visualization
+class PhasePortrait {
+    constructor() {
+        this.canvas = document.getElementById('phase-canvas');
+        this.ctx = this.canvas.getContext('2d');
+        this.delta = 0.5;
+        this.A = 1.0;
+        this.I0 = 0.5;
+        this.trajectory = [];
+        this.animating = false;
+        this.IMax = 4.0;
+        this.psiMax = Math.PI;
+        this.setupEventListeners();
+        this.draw();
+    }
+    
+    setupEventListeners() {
+        document.getElementById('delta-slider').addEventListener('input', (e) => {
+            this.delta = parseFloat(e.target.value);
+            document.getElementById('delta-value').textContent = this.delta.toFixed(2);
+            this.draw();
+        });
+        
+        document.getElementById('amplitude-slider').addEventListener('input', (e) => {
+            this.A = parseFloat(e.target.value);
+            document.getElementById('amplitude-value').textContent = this.A.toFixed(2);
+            this.draw();
+        });
+        
+        document.getElementById('energy-slider').addEventListener('input', (e) => {
+            this.I0 = parseFloat(e.target.value);
+            document.getElementById('energy-value').textContent = this.I0.toFixed(2);
+        });
+        
+        const imaxSlider = document.getElementById('imax-slider');
+        if (imaxSlider) {
+            imaxSlider.addEventListener('input', (e) => {
+                this.IMax = parseFloat(e.target.value);
+                const imaxValue = document.getElementById('imax-value');
+                if (imaxValue) {
+                    imaxValue.textContent = this.IMax.toFixed(1);
+                }
+                this.draw();
+            });
+        }
+        
+        const psimaxSlider = document.getElementById('psimax-slider');
+        if (psimaxSlider) {
+            psimaxSlider.addEventListener('input', (e) => {
+                this.psiMax = parseFloat(e.target.value);
+                const psimaxValue = document.getElementById('psimax-value');
+                if (psimaxValue) {
+                    psimaxValue.textContent = this.psiMax.toFixed(1);
+                }
+                this.draw();
+            });
+        }
+        
+        document.getElementById('phase-animate-btn').addEventListener('click', () => {
+            this.toggleAnimation();
+        });
+        
+        document.getElementById('phase-reset-btn').addEventListener('click', () => {
+            this.reset();
+        });
+        
+        document.getElementById('separatrix-btn').addEventListener('click', () => {
+            this.drawSeparatrix();
+        });
+    }
+    
+    deriv(I, psi) {
+        const s2 = Math.sqrt(Math.max(1e-12, 2 * I));
+        const dIdt = 2.0 * this.A * s2 * Math.sin(psi); // Restored factor 2 for model consistency
+        const dpsidt = this.delta + (this.A / Math.max(1e-8, s2)) * Math.cos(psi);
+        return [dIdt, dpsidt];
+    }
+    
+    resonantDynamics(I, psi, dt) {
+        const deriv = (i_in, p_in) => {
+            const s2 = Math.sqrt(Math.max(1e-12, 2.0 * i_in));
+            return {
+                dI: 2.0 * this.A * s2 * Math.sin(p_in),
+                dpsi: this.delta + this.A * (1.0 / Math.max(1e-8, s2)) * Math.cos(p_in)
+            };
+        };
+
+        const k1 = deriv(I, psi);
+        const k2 = deriv(I + 0.5 * dt * k1.dI, psi + 0.5 * dt * k1.dpsi);
+        const k3 = deriv(I + 0.5 * dt * k2.dI, psi + 0.5 * dt * k2.dpsi);
+        const k4 = deriv(I + dt * k3.dI, psi + dt * k3.dpsi);
+
+        const newI = I + (dt / 6.0) * (k1.dI + 2 * k2.dI + 2 * k3.dI + k4.dI);
+        const newPsi = psi + (dt / 6.0) * (k1.dpsi + 2 * k2.dpsi + 2 * k3.dpsi + k4.dpsi);
+
+        return [newI, newPsi];
+    }
+    
+    draw() {
+        const ctx = this.ctx;
+        const width = this.canvas.width;
+        const height = this.canvas.height;
+        
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, width, height);
+        
+        ctx.strokeStyle = '#e5e7eb';
+        ctx.lineWidth = 1;
+        
+        const IMax = this.IMax;
+        const psiMax = this.psiMax;
+        
+        // Draw grid lines and labels for Action (I)
+        const gridStepY = IMax / 8; // Dynamic for larger ranges
+        for (let i = 0; i <= IMax; i += gridStepY) {
+            const y = height - (i / IMax) * height;
+            ctx.beginPath();
+            ctx.moveTo(0, y);
+            ctx.lineTo(width, y);
+            ctx.stroke();
+            ctx.fillStyle = '#374151';
+            ctx.font = '10px monospace';
+            ctx.textAlign = 'left';
+            ctx.fillText(i.toFixed(1), 5, y - 2);
+        }
+        
+        // Draw grid lines and labels for Phase ψ
+        const numTicksX = 8;
+        for (let i = 0; i <= numTicksX; i++) {
+            const fraction = i / numTicksX;
+            const psi = -psiMax + fraction * 2 * psiMax;
+            const x = fraction * width;
+            ctx.beginPath();
+            ctx.moveTo(x, 0);
+            ctx.lineTo(x, height);
+            ctx.stroke();
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'top';
+            ctx.fillText(psi.toFixed(1), x, height - 20);
+        }
+        
+        this.drawFlowField();
+        
+        if (this.trajectory.length > 1) {
+            ctx.strokeStyle = '#dc2626';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            
+            this.trajectory.forEach((point, i) => {
+                const x = ((point.psi + psiMax) / (2 * psiMax)) * width;
+                const y = height - (point.I / IMax) * height;
+                
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            });
+            ctx.stroke();
+            
+            if (this.trajectory.length > 0) {
+                const last = this.trajectory[this.trajectory.length - 1];
+                const x = ((last.psi + psiMax) / (2 * psiMax)) * width;
+                const y = height - (last.I / IMax) * height;
+                
+                ctx.fillStyle = '#dc2626';
+                ctx.beginPath();
+                ctx.arc(x, y, 5, 0, 2 * Math.PI);
+                ctx.fill();
+            }
+        }
+        
+        ctx.fillStyle = '#374151';
+        ctx.font = '12px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText('Phase Portrait: Action I vs Phase ψ', width/2, 20);
+        
+        ctx.save();
+        ctx.translate(15, height/2);
+        ctx.rotate(-Math.PI/2);
+        ctx.fillText('Action I', 0, 0);
+        ctx.restore();
+        
+        ctx.fillText('Phase ψ', width/2, height - 10);
+    }
+    
+    drawFlowField() {
+        const ctx = this.ctx;
+        const width = this.canvas.width;
+        const height = this.canvas.height;
+        
+        ctx.strokeStyle = '#94a3b8';
+        ctx.lineWidth = 1;
+        
+        const IMax = this.IMax;
+        const psiMax = this.psiMax;
+        const step = Math.max(20, Math.floor(width / 30)); // Adjust step for larger range
+        
+        for (let px = step / 2; px < width; px += step) {
+            for (let py = step / 2; py < height; py += step) {
+                const psi = -psiMax + (px / width) * 2 * psiMax;
+                const I = IMax * (1 - py / height);
+                
+                if (I < 0.01) continue;
+                
+                const [dIdt, dpsidt] = this.deriv(I, psi);
+                
+                const dx_dt = dpsidt * (width / (2 * psiMax));
+                const dy_dt = -dIdt * (height / IMax);
+                
+                const len = Math.sqrt(dx_dt * dx_dt + dy_dt * dy_dt);
+                if (len < 1e-3) continue;
+                
+                const scale = 15 / len;
+                const normDx = dx_dt * scale;
+                const normDy = dy_dt * scale;
+                
+                ctx.beginPath();
+                ctx.moveTo(px, py);
+                ctx.lineTo(px + normDx, py + normDy);
+                ctx.stroke();
+                
+                const angle = Math.atan2(normDy, normDx);
+                ctx.beginPath();
+                ctx.moveTo(px + normDx, py + normDy);
+                ctx.lineTo(px + normDx - 6 * Math.cos(angle - 0.4), py + normDy - 6 * Math.sin(angle - 0.4));
+                ctx.moveTo(px + normDx, py + normDy);
+                ctx.lineTo(px + normDx - 6 * Math.cos(angle + 0.4), py + normDy - 6 * Math.sin(angle + 0.4));
+                ctx.stroke();
+            }
+        }
+    }
+    
+    drawSeparatrix() {
+        const ctx = this.ctx;
+        const width = this.canvas.width;
+        const height = this.canvas.height;
+        const psiMax = this.psiMax;
+        const IMax = this.IMax;
+        
+        let I_fixed = 0;
+        let psi_fixed = 0;
+        let color = '';
+        let has_separatrix = false;
+        
+        if (this.delta > 0) {
+            // Unstable fixed point
+            I_fixed = (this.A / this.delta) ** 2 / 2;
+            psi_fixed = Math.PI;
+            color = '#f59e0b'; // orange for unstable
+            has_separatrix = true;
+        } else if (this.delta < 0) {
+            // Stable fixed point
+            I_fixed = (this.A / Math.abs(this.delta)) ** 2 / 2;
+            psi_fixed = 0;
+            color = '#22c55e'; // green for stable
+            has_separatrix = false; // No separatrix for stable
+        } else {
+            return; // No fixed point at delta=0
+        }
+        
+        if (I_fixed > IMax) return; // Out of view
+        
+        // Draw fixed point
+        const x_fixed = ((psi_fixed + psiMax) / (2 * psiMax)) * width;
+        const y_fixed = height - (I_fixed / IMax) * height;
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.arc(x_fixed, y_fixed, 5, 0, 2 * Math.PI);
+        ctx.fill();
+        
+        if (!has_separatrix) return;
+        
+        // Compute H_saddle
+        const H_saddle = - (this.A ** 2) / (2 * this.delta);
+        
+        // Plot separatrix
+        let points_upper = [];
+        let points_lower = [];
+        const num_steps = 200;
+        
+        for (let k = 0; k <= num_steps; k++) {
+            const I = 0.001 + (IMax - 0.001) * (k / num_steps);
+            const term = (H_saddle - this.delta * I) / (this.A * Math.sqrt(2 * I));
+            if (Math.abs(term) <= 1) {
+                const psi = Math.acos(term);
+                const x_upper = ((psi + psiMax) / (2 * psiMax)) * width;
+                const x_lower = ((-psi + psiMax) / (2 * psiMax)) * width;
+                const y = height - (I / IMax) * height;
+                points_upper.push({x: x_upper, y: y});
+                points_lower.push({x: x_lower, y: y});
+            }
+        }
+        
+        ctx.strokeStyle = '#f59e0b';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([5, 5]);
+        
+        // Upper branch
+        ctx.beginPath();
+        let first = true;
+        points_upper.forEach(p => {
+            if (first) {
+                ctx.moveTo(p.x, p.y);
+                first = false;
+            } else {
+                ctx.lineTo(p.x, p.y);
+            }
+        });
+        ctx.stroke();
+        
+        // Lower branch
+        ctx.beginPath();
+        first = true;
+        points_lower.forEach(p => {
+            if (first) {
+                ctx.moveTo(p.x, p.y);
+                first = false;
+            } else {
+                ctx.lineTo(p.x, p.y);
+            }
+        });
+        ctx.stroke();
+        
+        ctx.setLineDash([]);
+    }
+    
+    toggleAnimation() {
+        const btn = document.getElementById('phase-animate-btn');
+        if (this.animating) {
+            this.animating = false;
+            btn.textContent = '▶️ Run Dynamics';
+        } else {
+            this.animating = true;
+            btn.textContent = '⏸️ Pause';
+            this.startTrajectory();
+        }
+    }
+    
+    startTrajectory() {
+        this.trajectory = [{I: this.I0, psi: 0.1}];
+        this.animate();
+    }
+    
+    animate() {
+        if (!this.animating || this.trajectory.length === 0) return;
+        
+        const current = this.trajectory[this.trajectory.length - 1];
+        const [newI, newPsi] = this.resonantDynamics(current.I, current.psi, 0.02);
+        
+        let wrappedPsi = ((newPsi + Math.PI) % (2 * Math.PI)) - Math.PI;
+        
+        this.trajectory.push({I: Math.max(0.01, newI), psi: wrappedPsi});
+        
+        if (this.trajectory.length > 500) {
+            this.trajectory.shift();
+        }
+        
+        this.draw();
+        
+        requestAnimationFrame(() => this.animate());
+    }
+    
+    reset() {
+        this.trajectory = [];
+        this.animating = false;
+        document.getElementById('phase-animate-btn').textContent = '▶️ Run Dynamics';
+        this.draw();
+    }
+}
+
+// Initialize when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    const landscape = new EnergyLandscape();
+    const phasePortrait = new PhasePortrait();
+    
+    landscape.updateInfo();
+});
+</script>
+
+<div style="margin-top: 60px; text-align: center; color: #666; font-style: italic;">
+    Mathematical Framework for Change within the Energy Landscape<br>
+    <strong>Standalone Interactive Edition</strong> - Complete • Self-Contained • Export Ready<br>
+    No External Dependencies • Works Offline • Full Mathematical Implementation
+</div>
+
+</body>
+</html>
