@@ -145,7 +145,7 @@
   // dynamic scaling: include meanM in the max
   let currentMax = barrier;
   if (memoryHistory.length) {
-    currentMax = Math.max(currentMax, meanM, ...memoryHistory);
+    currentMax = Math.max(maxVisualMagnitude, barrier * 1.2);
   }
   maxVisualMagnitude = Math.max(maxVisualMagnitude, currentMax * 1.1);
   if (maxVisualMagnitude < 1.0) maxVisualMagnitude = 1.0;
