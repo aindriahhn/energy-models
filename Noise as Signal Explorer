@@ -133,24 +133,36 @@
 
     // --- Drawing functions ---
     function drawScene() {
-  // clear the canvas
+  // 1) clear canvas
   ctx.fillStyle = '#f8f9fa';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  // ←─ added: compute steady-state mean of M for current decay & noise
+  // 2) compute steady-state mean
   const a              = Math.exp(-decay * dt);
   const noiseMagnitude = parseFloat(noiseSlider.value);
-  const meanM          = noiseMagnitude * Math.sqrt(2 / Math.PI) / (1 - a);
+  const meanM          = noiseMagnitude * Math.sqrt(2/Math.PI) / (1 - a);
 
-  // dynamic scaling: include meanM in the max
-  let currentMax = barrier;
+  // ←── replace your old scaling with this block ──→
+  // compute the maximum “data value” we need to show
+  let dataMax = barrier;                               // include threshold
   if (memoryHistory.length) {
-    currentMax = Math.max(maxVisualMagnitude, barrier * 1.2);
+    dataMax = Math.max(dataMax, meanM, ...memoryHistory);
   }
-  maxVisualMagnitude = Math.max(maxVisualMagnitude, currentMax * 1.1);
-  if (maxVisualMagnitude < 1.0) maxVisualMagnitude = 1.0;
 
-  // draw threshold line
+  // apply padding and only grow if that padded value exceeds current scale
+  const paddedMax = dataMax * 1.1;                     // 10% headroom
+  if (paddedMax > maxVisualMagnitude) {
+    maxVisualMagnitude = paddedMax;
+  }
+
+  // never let the scale drop below 1.0
+  if (maxVisualMagnitude < 1.0) {
+    maxVisualMagnitude = 1.0;
+  }
+  // ←─────────────────────────────────────────────────→
+
+  // 3) draw threshold line, mean line, history, etc.
+  const thresholdY = canvas.height - (barrier / maxVisualMagnitude) * canvas.height;
   const thresholdY = canvas.height - (barrier / maxVisualMagnitude) * canvas.height;
   ctx.strokeStyle = '#fc8181';
   ctx.lineWidth   = 2;
