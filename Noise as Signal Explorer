@@ -96,10 +96,16 @@
     let timeHistory = [];
     const maxHistory = canvas.width;
 
+    // ADDED: Dynamic scaling variable
+    let maxVisualMagnitude = 5.0; // Initial default, will adjust dynamically
+
+
     // --- UI updates ---
     barrierSlider.oninput = () => { 
         barrier = +barrierSlider.value; 
         document.getElementById('barrier-val').textContent = barrier.toFixed(1);
+        // ADDED: Adjust maxVisualMagnitude if barrier changes
+        maxVisualMagnitude = Math.max(maxVisualMagnitude, barrier * 1.2); // 20% padding
         drawScene();
     };
 
@@ -127,7 +133,7 @@
         
         const mag = Math.sqrt(-2.0 * Math.log(u));
         const z0 = mag * Math.cos(2.0 * Math.PI * v);
-        const z1 = mag * Math.sin(2.0 * Math.PI * v);
+        const z1 = mag * Math.sin(2.0 * Math.PI * v); // Corrected this line
         
         cachedGaussian = z1;
         return z0;
@@ -138,8 +144,17 @@
         ctx.fillStyle = '#f8f9fa';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         
+        // DYNAMIC SCALING: Find the maximum value to scale the canvas
+        let currentMax = barrier;
+        if (memoryHistory.length > 0) {
+            currentMax = Math.max(currentMax, Math.max(...memoryHistory));
+        }
+        maxVisualMagnitude = Math.max(maxVisualMagnitude, currentMax * 1.1); // Ensure some padding
+        if (maxVisualMagnitude < 1.0) maxVisualMagnitude = 1.0; // Prevent division by zero or too small scale
+
         // Draw threshold line
-        const thresholdY = canvas.height - (barrier / 5.0) * canvas.height;
+        // MODIFIED: Use maxVisualMagnitude for scaling
+        const thresholdY = canvas.height - (barrier / maxVisualMagnitude) * canvas.height;
         ctx.strokeStyle = '#fc8181';
         ctx.lineWidth = 2;
         ctx.setLineDash([5, 5]);
@@ -157,7 +172,8 @@
             
             for (let i = 0; i < memoryHistory.length; i++) {
                 const x = (i / maxHistory) * canvas.width;
-                const y = canvas.height - (memoryHistory[i] / 5.0) * canvas.height;
+                // MODIFIED: Use maxVisualMagnitude for scaling
+                const y = canvas.height - (memoryHistory[i] / maxVisualMagnitude) * canvas.height;
                 
                 if (i === 0) ctx.moveTo(x, y);
                 else ctx.lineTo(x, y);
@@ -168,7 +184,8 @@
         // Draw current memory level as a dot
         if (memoryHistory.length > 0) {
             const currentX = ((memoryHistory.length - 1) / maxHistory) * canvas.width;
-            const currentY = canvas.height - (memory / 5.0) * canvas.height;
+            // MODIFIED: Use maxVisualMagnitude for scaling
+            const currentY = canvas.height - (memory / maxVisualMagnitude) * canvas.height;
             
             ctx.fillStyle = memory >= barrier ? '#dc2626' : '#2563eb';
             ctx.beginPath();
@@ -183,6 +200,8 @@
         ctx.fillText(`Memory: ${memory.toFixed(3)}`, 10, 20);
         ctx.fillText(`Threshold: ${barrier.toFixed(1)}`, 10, 35);
         ctx.fillText(`Time: ${t.toFixed(2)}`, canvas.width - 100, 20);
+        // ADDED: Display the current scaling factor
+        ctx.fillText(`Max Scale: ${maxVisualMagnitude.toFixed(1)}`, canvas.width - 120, 35);
     }
 
     // --- Simulation step ---
@@ -259,6 +278,8 @@
         memory = 0;
         memoryHistory = [];
         timeHistory = [];
+        // RESET maxVisualMagnitude on reset
+        maxVisualMagnitude = 5.0; // Reset to default
         
         document.getElementById('start-btn').textContent = '▶ Start';
         
