@@ -133,57 +133,79 @@
 
     // --- Drawing functions ---
     function drawScene() {
-      ctx.fillStyle = '#f8f9fa';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+  // clear the canvas
+  ctx.fillStyle = '#f8f9fa';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      let currentMax = barrier;
-      if (memoryHistory.length) {
-        currentMax = Math.max(currentMax, Math.max(...memoryHistory));
-      }
-      maxVisualMagnitude = Math.max(maxVisualMagnitude, currentMax * 1.1);
-      if (maxVisualMagnitude < 1.0) maxVisualMagnitude = 1.0;
+  // ←─ added: compute steady-state mean of M for current decay & noise
+  const a              = Math.exp(-decay * dt);
+  const noiseMagnitude = parseFloat(noiseSlider.value);
+  const meanM          = noiseMagnitude * Math.sqrt(2 / Math.PI) / (1 - a);
 
-      const thresholdY = canvas.height - (barrier / maxVisualMagnitude) * canvas.height;
-      ctx.strokeStyle = '#fc8181';
-      ctx.lineWidth = 2;
-      ctx.setLineDash([5,5]);
-      ctx.beginPath();
-      ctx.moveTo(0, thresholdY);
-      ctx.lineTo(canvas.width, thresholdY);
-      ctx.stroke();
-      ctx.setLineDash([]);
+  // dynamic scaling: include meanM in the max
+  let currentMax = barrier;
+  if (memoryHistory.length) {
+    currentMax = Math.max(currentMax, meanM, ...memoryHistory);
+  }
+  maxVisualMagnitude = Math.max(maxVisualMagnitude, currentMax * 1.1);
+  if (maxVisualMagnitude < 1.0) maxVisualMagnitude = 1.0;
 
-      if (memoryHistory.length > 1) {
-        ctx.strokeStyle = '#2563eb';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        for (let i = 0; i < memoryHistory.length; i++) {
-          const x = (i / maxHistory) * canvas.width;
-          const y = canvas.height - (memoryHistory[i] / maxVisualMagnitude) * canvas.height;
-          if (i === 0) ctx.moveTo(x, y);
-          else ctx.lineTo(x, y);
-        }
-        ctx.stroke();
-      }
+  // draw threshold line
+  const thresholdY = canvas.height - (barrier / maxVisualMagnitude) * canvas.height;
+  ctx.strokeStyle = '#fc8181';
+  ctx.lineWidth   = 2;
+  ctx.setLineDash([5, 5]);
+  ctx.beginPath();
+  ctx.moveTo(0, thresholdY);
+  ctx.lineTo(canvas.width, thresholdY);
+  ctx.stroke();
+  ctx.setLineDash([]);
 
-      if (memoryHistory.length) {
-        const currentX = ((memoryHistory.length - 1) / maxHistory) * canvas.width;
-        const currentY = canvas.height - (memory / maxVisualMagnitude) * canvas.height;
-        ctx.fillStyle = memory >= barrier ? '#dc2626' : '#2563eb';
-        ctx.beginPath();
-        ctx.arc(currentX, currentY, 5, 0, 2 * Math.PI);
-        ctx.fill();
-      }
+  // ←─ added: draw E[M] reference line
+  const yMean = canvas.height - (meanM / maxVisualMagnitude) * canvas.height;
+  ctx.strokeStyle = '#999';
+  ctx.setLineDash([4, 4]);
+  ctx.beginPath();
+  ctx.moveTo(0, yMean);
+  ctx.lineTo(canvas.width, yMean);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = '#999';
+  ctx.fillText(`E[M]≈${meanM.toFixed(2)}`, 10, yMean - 6);
 
-      ctx.fillStyle = '#374151';
-      ctx.font      = '12px monospace';
-      ctx.textAlign = 'left';
-      ctx.fillText(`Memory: ${memory.toFixed(3)}`, 10, 20);
-      ctx.fillText(`Threshold: ${barrier.toFixed(1)}`, 10, 35);
-      ctx.fillText(`Time: ${t.toFixed(2)}`, canvas.width - 100, 20);
-      ctx.fillText(`Max Scale: ${maxVisualMagnitude.toFixed(1)}`, canvas.width - 120, 35);
+  // draw memory history curve
+  if (memoryHistory.length > 1) {
+    ctx.strokeStyle = '#2563eb';
+    ctx.lineWidth   = 2;
+    ctx.beginPath();
+    for (let i = 0; i < memoryHistory.length; i++) {
+      const x = (i / maxHistory) * canvas.width;
+      const y = canvas.height - (memoryHistory[i] / maxVisualMagnitude) * canvas.height;
+      if (i === 0) ctx.moveTo(x, y);
+      else          ctx.lineTo(x, y);
     }
+    ctx.stroke();
+  }
 
+  // draw current memory dot
+  if (memoryHistory.length) {
+    const currentX = ((memoryHistory.length - 1) / maxHistory) * canvas.width;
+    const currentY = canvas.height - (memory / maxVisualMagnitude) * canvas.height;
+    ctx.fillStyle = memory >= barrier ? '#dc2626' : '#2563eb';
+    ctx.beginPath();
+    ctx.arc(currentX, currentY, 5, 0, 2 * Math.PI);
+    ctx.fill();
+  }
+
+  // labels
+  ctx.fillStyle = '#374151';
+  ctx.font      = '12px monospace';
+  ctx.textAlign = 'left';
+  ctx.fillText(`Memory: ${memory.toFixed(3)}`, 10, 20);
+  ctx.fillText(`Threshold: ${barrier.toFixed(1)}`, 10, 35);
+  ctx.fillText(`Time: ${t.toFixed(2)}`, canvas.width - 100, 20);
+  ctx.fillText(`Max Scale: ${maxVisualMagnitude.toFixed(1)}`, canvas.width - 120, 35);
+}
     // --- Simulation step ---
     function step() {
       if (!running) return;
