@@ -102,7 +102,7 @@
     barrierSlider.oninput = () => {
       barrier = +barrierSlider.value;
       document.getElementById('barrier-val').textContent = barrier.toFixed(1);
-      maxVisualMagnitude = Math.max(maxVisualMagnitude, barrier * 1.2);
+      maxVisualMagnitude = Math.max(maxVisualMagnitude * 1.2);
       drawScene();
     };
     decaySlider.oninput = () => {
