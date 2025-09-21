@@ -47,7 +47,7 @@
   <div class="control-panel">
     <div class="slider-container">
       <label for="barrier">ΔC (threshold):</label>
-      <input id="barrier" type="range" min="0" max="5" step="0.1" value="1.0" class="slider"/>
+      <input id="barrier" type="range" min="0" max="20" step="0.1" value="1.0" class="slider"/>
       <span id="barrier-val">1.0</span>
     </div>
     <div class="slider-container">
