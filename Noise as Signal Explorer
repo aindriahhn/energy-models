@@ -41,7 +41,7 @@
 <body>
 
   <h1>Noise as Signal Explorer</h1>
-  <p>Explore how random fluctuation η crosses your cost-barrier ΔC, decays via memory, and becomes a diegetic ritual.</p>
+  <p>Explore how random fluctuation η crosses your cost-barrier ΔC, decays via memory, and effects threshold crossing t.</p>
 
   <h2>1. Parameters</h2>
   <div class="control-panel">
