@@ -231,11 +231,11 @@
             const noiseValue = eta.toFixed(3);
             const memoryValue = memory.toFixed(3);
             
-            const ritual = `t=${eventTime} → η=${noiseValue}, memory=${memoryValue} [THRESHOLD CROSSED]`;
+            const crossingEvent = t=${eventTime} → η=${noiseValue}, memory=${memoryValue} [THRESHOLD CROSSING];
             const eventDiv = document.createElement('div');
             eventDiv.style.color = '#dc2626';
             eventDiv.style.fontWeight = 'bold';
-            eventDiv.innerHTML = `⚡ ${ritual}`;
+            eventDiv.innerHTML = `⚡ ${crossingEvent}`;
             
             logEl.insertBefore(eventDiv, logEl.firstChild);
             
