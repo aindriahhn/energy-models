@@ -41,7 +41,7 @@
 <body>
 
   <h1>Noise as Signal Explorer</h1>
-  <p>Explore how random fluctuation η crosses your cost-barrier ΔC, decays via memory.</p>
+  <p>Explore how random fluctuation η crosses your cost-barrier ΔC, decays via memory, and becomes a diegetic ritual.</p>
 
   <h2>1. Parameters</h2>
   <div class="control-panel">
@@ -71,222 +71,181 @@
     <button class="btn" id="reset-btn">🔄 Reset</button>
   </div>
 
-  <h2>3. Event Log & Threshold Crossing Events</h2>
+  <h2 id="event-log-section">3. Event Log & Threshold Crossing Events</h2>
   <div id="event-log" class="event-log">
-    <div style="color: #666; font-style: italic;">Ready to detect threshold crossings...</div>
+    <div style="color: #666; font-style: italic;">
+      Ready to record threshold crossing events...
+    </div>
   </div>
 
   <script>
     // --- Core variables ---
     const barrierSlider = document.getElementById('barrier');
-    const decaySlider = document.getElementById('decay');
-    const noiseSlider = document.getElementById('noise');
+    const decaySlider   = document.getElementById('decay');
+    const noiseSlider   = document.getElementById('noise');
+    const logEl         = document.getElementById('event-log');
+    const canvas        = document.getElementById('signal-canvas');
+    const ctx           = canvas.getContext('2d');
+
     let barrier = parseFloat(barrierSlider.value);
-    let decay = parseFloat(decaySlider.value);
+    let decay   = parseFloat(decaySlider.value);
     let running = false;
-    let memory = 0;
-    const logEl = document.getElementById('event-log');
-    const canvas = document.getElementById('signal-canvas');
-    const ctx = canvas.getContext('2d');
-    const dt = 0.05;
-    let t = 0;
-
-    // History for visualization
-    let memoryHistory = [];
-    let timeHistory = [];
-    const maxHistory = canvas.width;
-
-    // ADDED: Dynamic scaling variable
-    let maxVisualMagnitude = 5.0; // Initial default, will adjust dynamically
-
+    let memory  = 0;
+    let t       = 0;
+    const dt           = 0.05;
+    const maxHistory   = canvas.width;
+    let memoryHistory  = [];
+    let timeHistory    = [];
+    let maxVisualMagnitude = 5.0;
 
     // --- UI updates ---
-    barrierSlider.oninput = () => { 
-        barrier = +barrierSlider.value; 
-        document.getElementById('barrier-val').textContent = barrier.toFixed(1);
-        // ADDED: Adjust maxVisualMagnitude if barrier changes
-        maxVisualMagnitude = Math.max(maxVisualMagnitude, barrier * 1.2); // 20% padding
-        drawScene();
+    barrierSlider.oninput = () => {
+      barrier = +barrierSlider.value;
+      document.getElementById('barrier-val').textContent = barrier.toFixed(1);
+      maxVisualMagnitude = Math.max(maxVisualMagnitude, barrier * 1.2);
+      drawScene();
     };
-
-    decaySlider.oninput = () => { 
-        decay = +decaySlider.value; 
-        document.getElementById('decay-val').textContent = decay.toFixed(2); 
+    decaySlider.oninput = () => {
+      decay = +decaySlider.value;
+      document.getElementById('decay-val').textContent = decay.toFixed(2);
     };
-
     noiseSlider.oninput = () => {
-        document.getElementById('noise-val').textContent = (+noiseSlider.value).toFixed(1);
+      document.getElementById('noise-val').textContent = (+noiseSlider.value).toFixed(1);
     };
 
     // --- Gaussian random number generator ---
     let cachedGaussian = null;
     function gaussianRandom() {
-        if (cachedGaussian !== null) {
-            const result = cachedGaussian;
-            cachedGaussian = null;
-            return result;
-        }
-        
-        let u = 0, v = 0;
-        while (u === 0) u = Math.random();
-        while (v === 0) v = Math.random();
-        
-        const mag = Math.sqrt(-2.0 * Math.log(u));
-        const z0 = mag * Math.cos(2.0 * Math.PI * v);
-        const z1 = mag * Math.sin(2.0 * Math.PI * v); // Corrected this line
-        
-        cachedGaussian = z1;
-        return z0;
+      if (cachedGaussian !== null) {
+        const result = cachedGaussian;
+        cachedGaussian = null;
+        return result;
+      }
+      let u = 0, v = 0;
+      while (u === 0) u = Math.random();
+      while (v === 0) v = Math.random();
+      const mag = Math.sqrt(-2.0 * Math.log(u));
+      const z0  = mag * Math.cos(2.0 * Math.PI * v);
+      const z1  = mag * Math.sin(2.0 * Math.PI * v);
+      cachedGaussian = z1;
+      return z0;
     }
 
     // --- Drawing functions ---
     function drawScene() {
-        ctx.fillStyle = '#f8f9fa';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        
-        // DYNAMIC SCALING: Find the maximum value to scale the canvas
-        let currentMax = barrier;
-        if (memoryHistory.length > 0) {
-            currentMax = Math.max(currentMax, Math.max(...memoryHistory));
-        }
-        maxVisualMagnitude = Math.max(maxVisualMagnitude, currentMax * 1.1); // Ensure some padding
-        if (maxVisualMagnitude < 1.0) maxVisualMagnitude = 1.0; // Prevent division by zero or too small scale
+      ctx.fillStyle = '#f8f9fa';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        // Draw threshold line
-        // MODIFIED: Use maxVisualMagnitude for scaling
-        const thresholdY = canvas.height - (barrier / maxVisualMagnitude) * canvas.height;
-        ctx.strokeStyle = '#fc8181';
+      let currentMax = barrier;
+      if (memoryHistory.length) {
+        currentMax = Math.max(currentMax, Math.max(...memoryHistory));
+      }
+      maxVisualMagnitude = Math.max(maxVisualMagnitude, currentMax * 1.1);
+      if (maxVisualMagnitude < 1.0) maxVisualMagnitude = 1.0;
+
+      const thresholdY = canvas.height - (barrier / maxVisualMagnitude) * canvas.height;
+      ctx.strokeStyle = '#fc8181';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([5,5]);
+      ctx.beginPath();
+      ctx.moveTo(0, thresholdY);
+      ctx.lineTo(canvas.width, thresholdY);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      if (memoryHistory.length > 1) {
+        ctx.strokeStyle = '#2563eb';
         ctx.lineWidth = 2;
-        ctx.setLineDash([5, 5]);
         ctx.beginPath();
-        ctx.moveTo(0, thresholdY);
-        ctx.lineTo(canvas.width, thresholdY);
+        for (let i = 0; i < memoryHistory.length; i++) {
+          const x = (i / maxHistory) * canvas.width;
+          const y = canvas.height - (memoryHistory[i] / maxVisualMagnitude) * canvas.height;
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
         ctx.stroke();
-        ctx.setLineDash([]);
-        
-        // Draw memory history
-        if (memoryHistory.length > 1) {
-            ctx.strokeStyle = '#2563eb';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            
-            for (let i = 0; i < memoryHistory.length; i++) {
-                const x = (i / maxHistory) * canvas.width;
-                // MODIFIED: Use maxVisualMagnitude for scaling
-                const y = canvas.height - (memoryHistory[i] / maxVisualMagnitude) * canvas.height;
-                
-                if (i === 0) ctx.moveTo(x, y);
-                else ctx.lineTo(x, y);
-            }
-            ctx.stroke();
-        }
-        
-        // Draw current memory level as a dot
-        if (memoryHistory.length > 0) {
-            const currentX = ((memoryHistory.length - 1) / maxHistory) * canvas.width;
-            // MODIFIED: Use maxVisualMagnitude for scaling
-            const currentY = canvas.height - (memory / maxVisualMagnitude) * canvas.height;
-            
-            ctx.fillStyle = memory >= barrier ? '#dc2626' : '#2563eb';
-            ctx.beginPath();
-            ctx.arc(currentX, currentY, 5, 0, 2 * Math.PI);
-            ctx.fill();
-        }
-        
-        // Labels
-        ctx.fillStyle = '#374151';
-        ctx.font = '12px monospace';
-        ctx.textAlign = 'left';
-        ctx.fillText(`Memory: ${memory.toFixed(3)}`, 10, 20);
-        ctx.fillText(`Threshold: ${barrier.toFixed(1)}`, 10, 35);
-        ctx.fillText(`Time: ${t.toFixed(2)}`, canvas.width - 100, 20);
-        // ADDED: Display the current scaling factor
-        ctx.fillText(`Max Scale: ${maxVisualMagnitude.toFixed(1)}`, canvas.width - 120, 35);
+      }
+
+      if (memoryHistory.length) {
+        const currentX = ((memoryHistory.length - 1) / maxHistory) * canvas.width;
+        const currentY = canvas.height - (memory / maxVisualMagnitude) * canvas.height;
+        ctx.fillStyle = memory >= barrier ? '#dc2626' : '#2563eb';
+        ctx.beginPath();
+        ctx.arc(currentX, currentY, 5, 0, 2 * Math.PI);
+        ctx.fill();
+      }
+
+      ctx.fillStyle = '#374151';
+      ctx.font      = '12px monospace';
+      ctx.textAlign = 'left';
+      ctx.fillText(`Memory: ${memory.toFixed(3)}`, 10, 20);
+      ctx.fillText(`Threshold: ${barrier.toFixed(1)}`, 10, 35);
+      ctx.fillText(`Time: ${t.toFixed(2)}`, canvas.width - 100, 20);
+      ctx.fillText(`Max Scale: ${maxVisualMagnitude.toFixed(1)}`, canvas.width - 120, 35);
     }
 
     // --- Simulation step ---
     function step() {
-        if (!running) return;
-        
-        // Generate noise
-        const noiseMagnitude = parseFloat(noiseSlider.value);
-        const eta = noiseMagnitude * gaussianRandom();
-        
-        // Update memory with exponential decay + absolute noise contribution
-        memory = memory * Math.exp(-decay * dt) + Math.abs(eta);
-        
-        // Store history
-        memoryHistory.push(memory);
-        timeHistory.push(t);
-        
-        // Limit history length
-        if (memoryHistory.length > maxHistory) {
-            memoryHistory.shift();
-            timeHistory.shift();
+      if (!running) return;
+
+      const noiseMagnitude = parseFloat(noiseSlider.value);
+      const eta            = noiseMagnitude * gaussianRandom();
+
+      memory = memory * Math.exp(-decay * dt) + Math.abs(eta);
+      memoryHistory.push(memory);
+      timeHistory.push(t);
+
+      if (memoryHistory.length > maxHistory) {
+        memoryHistory.shift();
+        timeHistory.shift();
+      }
+
+      // Check threshold crossing ⇒ log a crossingEvent then reset
+      if (memory >= barrier) {
+        const eventTime   = t.toFixed(2);
+        const noiseValue  = eta.toFixed(3);
+        const memoryValue = memory.toFixed(3);
+
+        const crossingEvent = `t=${eventTime} → η=${noiseValue}, memory=${memoryValue} [THRESHOLD CROSSING]`;
+        const eventDiv      = document.createElement('div');
+        eventDiv.style.color      = '#dc2626';
+        eventDiv.style.fontWeight = 'bold';
+        eventDiv.innerHTML        = `⚡ ${crossingEvent}`;
+        logEl.insertBefore(eventDiv, logEl.firstChild);
+
+        while (logEl.children.length > 20) {
+          logEl.removeChild(logEl.lastChild);
         }
-        
-        // Check threshold crossing
-        if (memory >= barrier) {
-            const eventTime = t.toFixed(2);
-            const noiseValue = eta.toFixed(3);
-            const memoryValue = memory.toFixed(3);
-            
-            const crossingEvent = t=${eventTime} → η=${noiseValue}, memory=${memoryValue} [THRESHOLD CROSSING];
-            const eventDiv = document.createElement('div');
-            eventDiv.style.color = '#dc2626';
-            eventDiv.style.fontWeight = 'bold';
-            eventDiv.innerHTML = `⚡ ${crossingEvent}`;
-            
-            logEl.insertBefore(eventDiv, logEl.firstChild);
-            
-            // Limit log entries
-            while (logEl.children.length > 20) {
-                logEl.removeChild(logEl.lastChild);
-            }
-            
-            // Reset memory after threshold crossing
-            memory = 0;
-        }
-        
-        // Draw current state
-        drawScene();
-        
-        t += dt;
-        requestAnimationFrame(step);
+
+        memory = 0;
+      }
+
+      drawScene();
+      t += dt;
+      requestAnimationFrame(step);
     }
 
     // --- Control functions ---
     document.getElementById('start-btn').onclick = () => {
-        if (!running) {
-            running = true;
-            document.getElementById('start-btn').textContent = '⏸ Pause';
-            step();
-        } else {
-            running = false;
-            document.getElementById('start-btn').textContent = '▶ Start';
-        }
+      running = !running;
+      document.getElementById('start-btn').textContent = running ? '⏸ Pause' : '▶ Start';
+      if (running) step();
     };
-
     document.getElementById('stop-btn').onclick = () => {
-        running = false;
-        document.getElementById('start-btn').textContent = '▶ Start';
+      running = false;
+      document.getElementById('start-btn').textContent = '▶ Start';
     };
-
     document.getElementById('reset-btn').onclick = () => {
-        running = false;
-        t = 0;
-        memory = 0;
-        memoryHistory = [];
-        timeHistory = [];
-        // RESET maxVisualMagnitude on reset
-        maxVisualMagnitude = 5.0; // Reset to default
-        
-        document.getElementById('start-btn').textContent = '▶ Start';
-        
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        drawScene();
-        
-        logEl.innerHTML = '<div style="color: #666; font-style: italic;">Event log cleared - ready for new simulation</div>';
+      running = false;
+      t = 0;
+      memory = 0;
+      memoryHistory = [];
+      timeHistory = [];
+      maxVisualMagnitude = 5.0;
+      document.getElementById('start-btn').textContent = '▶ Start';
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawScene();
+      logEl.innerHTML = '<div style="color: #666; font-style: italic;">Event log cleared - ready for new simulation</div>';
     };
 
     // Initialize display
