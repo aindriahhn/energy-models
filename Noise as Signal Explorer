@@ -142,18 +142,18 @@
       const noiseMagnitude = parseFloat(noiseSlider.value);
       const meanM          = noiseMagnitude * Math.sqrt(2/Math.PI) / (1 - a);
 
-      // 3) autoscale: include barrier, meanM, and history peaks
-      let dataMax = barrier;
-      if (memoryHistory.length) {
-        dataMax = Math.max(dataMax, meanM, ...memoryHistory);
-      }
-      const paddedMax = dataMax * 1.1;
-      if (paddedMax > maxVisualMagnitude) {
-        maxVisualMagnitude = paddedMax;
-      }
-      if (maxVisualMagnitude < 1.0) {
-        maxVisualMagnitude = 1.0;
-      }
+// 3) autoscale on barrier + actual memory only
+let dataMax = barrier;
+if (memoryHistory.length) {
+  dataMax = Math.max(dataMax, ...memoryHistory);
+}
+const paddedMax = dataMax * 1.1;
+if (paddedMax > maxVisualMagnitude) {
+  maxVisualMagnitude = paddedMax;
+}
+if (maxVisualMagnitude < 1.0) {
+  maxVisualMagnitude = 1.0;
+}
 
       // 4) draw threshold line
       const thresholdY = canvas.height - (barrier / maxVisualMagnitude) * canvas.height;
