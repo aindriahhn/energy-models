@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Noise as Signal Explorer</title>
+  <style>
+    body {
+      font-family: 'Times New Roman', serif;
+      line-height: 1.6;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 40px 20px;
+      color: #333;
+      background: #fff;
+    }
+    h1 { text-align: center; color: #1a365d; border-bottom: 3px solid #2b77ad; padding-bottom: .5em; }
+    h2 { color: #2b77ad; margin-top: 2em; border-bottom: 2px solid #4a9eff; padding-bottom: .3em; }
+    .control-panel {
+      background: rgba(102,126,234,0.1);
+      padding: 15px; border-radius: 8px; margin: 20px 0;
+    }
+    .slider-container { display: flex; align-items: center; gap: 10px; margin: 10px 0; }
+    .slider-container label { min-width: 140px; font-weight: bold; }
+    .slider { flex: 1; }
+    .event-log {
+      background: #f0fff4; border-left: 4px solid #48bb78;
+      padding: 15px; margin: 20px 0; max-height: 200px; overflow-y: auto;
+      font-family: monospace; font-size: .9em;
+    }
+    .button-group { text-align: center; margin: 15px 0; }
+    .btn {
+      background: #2b77ad; color: #fff; padding: 8px 16px;
+      border: none; border-radius: 6px; cursor: pointer;
+      font-weight: bold; margin: 0 5px;
+    }
+    .btn:hover { background: #4a9eff; }
+    canvas { border: 1px solid #ddd; border-radius: 4px; display: block; margin: 0 auto; }
+  </style>
+</head>
+<body>
+
+  <h1>Noise as Signal Explorer</h1>
+  <p>Explore how random fluctuation η crosses your cost-barrier ΔC, decays via memory, and becomes a diegetic ritual.</p>
+
+  <h2>1. Parameters</h2>
+  <div class="control-panel">
+    <div class="slider-container">
+      <label for="barrier">ΔC (threshold):</label>
+      <input id="barrier" type="range" min="0" max="5" step="0.1" value="1.0" class="slider"/>
+      <span id="barrier-val">1.0</span>
+    </div>
+    <div class="slider-container">
+      <label for="decay">Decay rate λ:</label>
+      <input id="decay" type="range" min="0" max="1" step="0.01" value="0.2" class="slider"/>
+      <span id="decay-val">0.20</span>
+    </div>
+    <div class="slider-container">
+      <label for="noise">η magnitude:</label>
+      <input id="noise" type="range" min="0" max="3" step="0.1" value="0.5" class="slider"/>
+      <span id="noise-val">0.5</span>
+    </div>
+  </div>
+
+  <h2>2. Live Simulation</h2>
+  <canvas id="signal-canvas" width="600" height="200"></canvas>
+
+  <div class="button-group">
+    <button class="btn" id="start-btn">▶ Start</button>
+    <button class="btn" id="stop-btn">⏸ Stop</button>
+    <button class="btn" id="reset-btn">🔄 Reset</button>
+  </div>
+
+  <h2>3. Event Log & Rituals</h2>
+  <div id="event-log" class="event-log">
+    <div style="color: #666; font-style: italic;">Ready to detect threshold crossings...</div>
+  </div>
+
+  <script>
+    // --- Core variables ---
+    const barrierSlider = document.getElementById('barrier');
+    const decaySlider = document.getElementById('decay');
+    const noiseSlider = document.getElementById('noise');
+    let barrier = parseFloat(barrierSlider.value);
+    let decay = parseFloat(decaySlider.value);
+    let running = false;
+    let memory = 0;
+    const logEl = document.getElementById('event-log');
+    const canvas = document.getElementById('signal-canvas');
+    const ctx = canvas.getContext('2d');
+    const dt = 0.05;
+    let t = 0;
+
+    // History for visualization
+    let memoryHistory = [];
+    let timeHistory = [];
+    const maxHistory = canvas.width;
+
+    // --- UI updates ---
+    barrierSlider.oninput = () => { 
+        barrier = +barrierSlider.value; 
+        document.getElementById('barrier-val').textContent = barrier.toFixed(1);
+        drawScene();
+    };
+
+    decaySlider.oninput = () => { 
+        decay = +decaySlider.value; 
+        document.getElementById('decay-val').textContent = decay.toFixed(2); 
+    };
+
+    noiseSlider.oninput = () => {
+        document.getElementById('noise-val').textContent = (+noiseSlider.value).toFixed(1);
+    };
+
+    // --- Gaussian random number generator ---
+    let cachedGaussian = null;
+    function gaussianRandom() {
+        if (cachedGaussian !== null) {
+            const result = cachedGaussian;
+            cachedGaussian = null;
+            return result;
+        }
+        
+        let u = 0, v = 0;
+        while (u === 0) u = Math.random();
+        while (v === 0) v = Math.random();
+        
+        const mag = Math.sqrt(-2.0 * Math.log(u));
+        const z0 = mag * Math.cos(2.0 * Math.PI * v);
+        const z1 = mag * Math.sin(2.0 * Math.PI * v);
+        
+        cachedGaussian = z1;
+        return z0;
+    }
+
+    // --- Drawing functions ---
+    function drawScene() {
+        ctx.fillStyle = '#f8f9fa';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        // Draw threshold line
+        const thresholdY = canvas.height - (barrier / 5.0) * canvas.height;
+        ctx.strokeStyle = '#fc8181';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([5, 5]);
+        ctx.beginPath();
+        ctx.moveTo(0, thresholdY);
+        ctx.lineTo(canvas.width, thresholdY);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        
+        // Draw memory history
+        if (memoryHistory.length > 1) {
+            ctx.strokeStyle = '#2563eb';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            
+            for (let i = 0; i < memoryHistory.length; i++) {
+                const x = (i / maxHistory) * canvas.width;
+                const y = canvas.height - (memoryHistory[i] / 5.0) * canvas.height;
+                
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+        }
+        
+        // Draw current memory level as a dot
+        if (memoryHistory.length > 0) {
+            const currentX = ((memoryHistory.length - 1) / maxHistory) * canvas.width;
+            const currentY = canvas.height - (memory / 5.0) * canvas.height;
+            
+            ctx.fillStyle = memory >= barrier ? '#dc2626' : '#2563eb';
+            ctx.beginPath();
+            ctx.arc(currentX, currentY, 5, 0, 2 * Math.PI);
+            ctx.fill();
+        }
+        
+        // Labels
+        ctx.fillStyle = '#374151';
+        ctx.font = '12px monospace';
+        ctx.textAlign = 'left';
+        ctx.fillText(`Memory: ${memory.toFixed(3)}`, 10, 20);
+        ctx.fillText(`Threshold: ${barrier.toFixed(1)}`, 10, 35);
+        ctx.fillText(`Time: ${t.toFixed(2)}`, canvas.width - 100, 20);
+    }
+
+    // --- Simulation step ---
+    function step() {
+        if (!running) return;
+        
+        // Generate noise
+        const noiseMagnitude = parseFloat(noiseSlider.value);
+        const eta = noiseMagnitude * gaussianRandom();
+        
+        // Update memory with exponential decay + absolute noise contribution
+        memory = memory * Math.exp(-decay * dt) + Math.abs(eta);
+        
+        // Store history
+        memoryHistory.push(memory);
+        timeHistory.push(t);
+        
+        // Limit history length
+        if (memoryHistory.length > maxHistory) {
+            memoryHistory.shift();
+            timeHistory.shift();
+        }
+        
+        // Check threshold crossing
+        if (memory >= barrier) {
+            const eventTime = t.toFixed(2);
+            const noiseValue = eta.toFixed(3);
+            const memoryValue = memory.toFixed(3);
+            
+            const ritual = `t=${eventTime} → η=${noiseValue}, memory=${memoryValue} [THRESHOLD CROSSED]`;
+            const eventDiv = document.createElement('div');
+            eventDiv.style.color = '#dc2626';
+            eventDiv.style.fontWeight = 'bold';
+            eventDiv.innerHTML = `⚡ ${ritual}`;
+            
+            logEl.insertBefore(eventDiv, logEl.firstChild);
+            
+            // Limit log entries
+            while (logEl.children.length > 20) {
+                logEl.removeChild(logEl.lastChild);
+            }
+            
+            // Reset memory after threshold crossing
+            memory = 0;
+        }
+        
+        // Draw current state
+        drawScene();
+        
+        t += dt;
+        requestAnimationFrame(step);
+    }
+
+    // --- Control functions ---
+    document.getElementById('start-btn').onclick = () => {
+        if (!running) {
+            running = true;
+            document.getElementById('start-btn').textContent = '⏸ Pause';
+            step();
+        } else {
+            running = false;
+            document.getElementById('start-btn').textContent = '▶ Start';
+        }
+    };
+
+    document.getElementById('stop-btn').onclick = () => {
+        running = false;
+        document.getElementById('start-btn').textContent = '▶ Start';
+    };
+
+    document.getElementById('reset-btn').onclick = () => {
+        running = false;
+        t = 0;
+        memory = 0;
+        memoryHistory = [];
+        timeHistory = [];
+        
+        document.getElementById('start-btn').textContent = '▶ Start';
+        
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        drawScene();
+        
+        logEl.innerHTML = '<div style="color: #666; font-style: italic;">Event log cleared - ready for new simulation</div>';
+    };
+
+    // Initialize display
+    drawScene();
+  </script>
+
+</body>
+</html>
