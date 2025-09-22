@@ -180,7 +180,19 @@ const empMean = memoryHistory.length
       ctx.setLineDash([]);
       ctx.fillStyle = '#999';
       ctx.fillText(`E[M]≈${meanM.toFixed(2)}`, 10, yMean - 6);
-
+// draw empirical mean of memoryHistory
+if (memoryHistory.length) {
+  const yEmp = canvas.height - (empMean / maxVisualMagnitude) * canvas.height;
+  ctx.strokeStyle = '#48bb78';
+  ctx.setLineDash([4, 2]);
+  ctx.beginPath();
+  ctx.moveTo(0, yEmp);
+  ctx.lineTo(canvas.width, yEmp);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = '#48bb78';
+  ctx.fillText(`Emp[M]≈${empMean.toFixed(2)}`, 10, yEmp - 6);
+}
       // 6) draw memory history curve
       if (memoryHistory.length > 1) {
         ctx.strokeStyle = '#2563eb';
