@@ -165,7 +165,10 @@ if (maxVisualMagnitude < 1.0) {
       ctx.lineTo(canvas.width, thresholdY);
       ctx.stroke();
       ctx.setLineDash([]);
-
+// 4a) compute empirical mean of the resetting process
+const empMean = memoryHistory.length
+  ? memoryHistory.reduce((sum, v) => sum + v, 0) / memoryHistory.length
+  : 0;
       // 5) draw E[M] reference line
       const yMean = canvas.height - (meanM / maxVisualMagnitude) * canvas.height;
       ctx.strokeStyle = '#999';
