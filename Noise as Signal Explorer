@@ -52,7 +52,7 @@
     </div>
     <div class="slider-container">
       <label for="decay">Decay rate λ:</label>
-      <input id="decay" type="range" min="0" max="1" step="0.01" value="0.2" class="slider"/>
+      <input id="decay" type="range" min="0" max="5" step="0.01" value="0.2" class="slider"/>
       <span id="decay-val">0.20</span>
     </div>
     <div class="slider-container">
